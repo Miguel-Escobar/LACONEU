@@ -11,13 +11,13 @@ function kuramotoNetwork!(dtheta, theta, h, p, t)
     for i in 1:N
         dtheta[i] = omega
         for j in 1:N
-            if Kcoupling_matrix[j, i] != 0.0
-                delayed_source = h(p, t - delay_matrix[j, i])[j]
-                dtheta[i] += kuramotoEdge(delayed_source, theta[i], Kcoupling_matrix[j, i])
+            if Kcoupling_matrix[i, j] != 0
+                delayed_source = h(p, t - delay_matrix[i, j])[j]
+                dtheta[i] += kuramotoEdge(delayed_source, theta[i], Kcoupling_matrix[i, j])
             end
         end
     end
-    nothing
+    return nothing
 end
 
 function loadNetwork(filename)
@@ -51,8 +51,7 @@ function runSimulation(couplingMatrix, timedelayMatrix, omega, tspan)
     p = (couplingMatrix, timedelayMatrix, omega, N)
 
     theta0 = 1 .* ones(N) .+ 0.1 .* randn(N)
-    thetacopy = copy(theta0)
-    h(p, x) = thetacopy
+    h(p, x) = ones(N).*1.0
 
     prob = DDEProblem(kuramotoNetwork!, theta0, h, tspan, p; constant_lags = vec(timedelayMatrix))
     show(prob)
